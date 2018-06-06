@@ -1,4 +1,3 @@
-import json
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +10,7 @@ lon = []
 lat_res = []
 lon_res = []
 dist = [0, 0, 0, 0, 0, 0]
+dist_prom = [0, 0, 0, 0, 0, 0]
 R = 6371
 
 dLat = 0
@@ -49,15 +49,13 @@ def parse(s):
             s2 = s2[:t]
         localparse(s2)
 
+
 s = f.readline()
 while s != "":
     parse(s)
     s = f.readline()
 
 size = len(lat)
-plt.figure()
-plt.plot(lat, lon)
-plt.show()
 i = 0
 while i < 6:
     lat_res.append(lat[i])
@@ -72,8 +70,9 @@ while i < size - 6:
     j = 0
     while j <= len(lat_res) - 6:
         k = 0
+        flag = 0
         while k < 6:
-            if k!=6:
+            if k != 6:
                 c2 = math.cos(lat[i + 1])
                 c1 = math.cos(lat[i])
                 s2 = math.sin(lat[i + 1])
@@ -83,10 +82,6 @@ while i < size - 6:
                 x = s1 * s2 + c1 * c2 * math.cos(delt)
                 ad = math.atan2(y, x)
                 dist = ad * R
-                if dist > 300:
-                    flag = 5
-                    break
-
             c2 = math.cos(lat_res[j + k])
             c1 = math.cos(lat[i + k])
             s2 = math.sin(lat_res[j + k])
@@ -95,12 +90,14 @@ while i < size - 6:
             y = math.sqrt(math.pow(c * math.sin(delt), 2) + math.pow(c1 * s2 - s1 * c2 * math.cos(delt), 2))
             x = s1 * s2 + c1 * c2 * math.cos(delt)
             ad = math.atan2(y, x)
-            dist = ad * R
-            if dist < 5:
-                flag = flag + 1
+            dist_prom[k] = ad * R
             k = k + 1
         k = 0
-        if flag >= 2:
+        while k < 5:
+            if math.fabs(dist_prom[k] - dist_prom[k + 1]) < 5 and dist_prom[k] < 5:
+                flag = flag + 1
+            k = k + 1
+        if flag > 3:
             break
         j = j + 1
     if flag <= 2:
@@ -109,7 +106,6 @@ while i < size - 6:
             lat_res.append(lat[i + k])
             lon_res.append(lon[i + k])
             k = k + 1
-    flag = 0
     i = i + 6
     if i % 100 == 0:
         print(i)
